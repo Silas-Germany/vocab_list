@@ -7,14 +7,26 @@ import 'generated/l10n.dart';
 
 class Overview extends State<GeneralStatefulWidget> {
 
-  final firstLanguageCodeNotifier = ValueNotifier("en");
-  final secondLanguageCodeNotifier = ValueNotifier("hi");
+  static const availableLanguageCode = ["en", "hi"];
+
+  final firstLanguageCodeNotifier = ValueNotifier(availableLanguageCode[0]);
+  final secondLanguageCodeNotifier = ValueNotifier(availableLanguageCode[1]);
 
   @override
   void initState() {
     super.initState();
-    firstLanguageCodeNotifier.addListener(() => setState(() {}));
-    secondLanguageCodeNotifier.addListener(() => setState(() {}));
+    firstLanguageCodeNotifier.addListener(() {
+      if (firstLanguageCodeNotifier.value == secondLanguageCodeNotifier.value) {
+        final sameCode = firstLanguageCodeNotifier.value;
+        secondLanguageCodeNotifier.value = availableLanguageCode.firstWhere((code) => code != sameCode);
+      } else setState(() {});
+    });
+    secondLanguageCodeNotifier.addListener(() {
+      if (firstLanguageCodeNotifier.value == secondLanguageCodeNotifier.value) {
+        final sameCode = firstLanguageCodeNotifier.value;
+        firstLanguageCodeNotifier.value = availableLanguageCode.firstWhere((code) => code != sameCode);
+      } else setState(() {});
+    });
   }
 
   @override Widget build(BuildContext context) => Scaffold(
@@ -40,10 +52,8 @@ class Overview extends State<GeneralStatefulWidget> {
 class LanguageSelector extends State<GeneralStatefulWidget> {
 
   ValueNotifier<String> languageCodeNotifier;
-  static const availableLanguageCode = ["en", "hi"];
 
-  LanguageSelector(this.languageCodeNotifier) :
-        assert(availableLanguageCode.contains(languageCodeNotifier.value));
+  LanguageSelector(this.languageCodeNotifier);
 
   static const dropDownStyle = TextStyle(fontSize: 22);
 
