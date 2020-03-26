@@ -3,4 +3,6 @@
 /.packages
 /build/
 /pubspec.lock
+
 /.idea/
+/lib/generated/
