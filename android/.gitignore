@@ -1,0 +1,7 @@
+# Ignore automatically generated files
+/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+/.gradle/
+/gradle/wrapper/gradle-wrapper.jar
+/gradlew.bat
+
+/local.properties

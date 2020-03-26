@@ -1,0 +1,5 @@
+# Ignore automatically generated files
+/.dart_tool/
+/.packages
+/build/
+/pubspec.lock
