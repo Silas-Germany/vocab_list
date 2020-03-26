@@ -2,5 +2,8 @@
   "@@locale": "en",
 
   "overview": "Overview",
-  "addWord": "Add Word"
+  "addWord": "Add Word",
+
+  "english": "English",
+  "hindi": "Hindi"
 }

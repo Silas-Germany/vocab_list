@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:vocab_list/helper.dart';
 
 import 'generated/l10n.dart';
+import 'helper.dart';
 import 'overview.dart';
 
 main() => runApp(MyApp());
