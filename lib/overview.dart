@@ -39,68 +39,120 @@ class Overview extends State<GeneralStatefulWidget> {
     appBar: AppBar(
       title: Text(S.of(context).overview),
     ),
-    body: Column(
-      children: <Widget>[
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            GeneralStatefulWidget(() => LanguageSelector(firstLanguageCodeNotifier)),
-            Text("->", style: TextStyle(fontSize: 24)),
-            GeneralStatefulWidget(() => LanguageSelector(secondLanguageCodeNotifier)),
-          ],
-        ),
-      ] + wordList.entries.map((word) => GestureDetector(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Text(word.key, style: TextStyle(fontSize: 20)),
-            Text(word.value, style: TextStyle(fontSize: 20)),
-          ],
-        ),
-        onLongPress: () {
-          showDialog(context: context,
-              child: AlertDialog(
-                content: Text(S.of(context).deleteConfirmation(word.key)),
-                actions: [
-                  FlatButton(
-                    child: Text(S.of(context).no),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
+    body: SingleChildScrollView(
+      child: Column(
+        children: <Widget>[
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              GeneralStatefulWidget(() => LanguageSelector(firstLanguageCodeNotifier)),
+              Text("->", style: TextStyle(fontSize: 24)),
+              GeneralStatefulWidget(() => LanguageSelector(secondLanguageCodeNotifier)),
+            ],
+          ),
+          Table(
+            columnWidths: const {0: FlexColumnWidth(60), 1: FlexColumnWidth(100)},
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            border: TableBorder.symmetric(inside: BorderSide(color: Colors.grey, width: 1)),
+            children: wordList.entries.map((word) => TableRow(
+              children: [
+                Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Row(
+                    children: [
+                      menuPopup(word),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(word.key, style: TextStyle(fontSize: 20)),
+                      ),
+                    ],
                   ),
-                  FlatButton(
-                    child: Text(S.of(context).yes),
-                    onPressed: () {
-                      setState(() {
-                        wordList.remove(word.key);
-                      });
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-              )
-          );
-        },
-      )).toList() + [
-        const SizedBox(height: 16),
-        RaisedButton(
-          child: Text(S.of(context).newWord, style: const TextStyle(fontSize: 24)),
-          onPressed: () async {
-            final word = await Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
-                builder: (context) => GeneralStatefulWidget(() => EditWord())
-            ));
-            if (word != null) wordList[word.key] = word.value;
-          },
-        ),
-        const SizedBox(height: 24),
-        RaisedButton(
-          child: Text(S.of(context).export, style: const TextStyle(fontSize: 20)),
-          onPressed: () {},
-        ),
-      ],
+                ),
+                Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Text(word.value, style: TextStyle(fontSize: 20)),
+                ),
+              ],
+            ),
+            ).toList(),
+          ),
+          const SizedBox(height: 16),
+          RaisedButton(
+            child: Text(S.of(context).newWord, style: const TextStyle(fontSize: 24)),
+            onPressed: () async {
+              final word = await Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
+                  builder: (context) => GeneralStatefulWidget(() => EditWord())
+              ));
+              if (word != null) wordList[word.key] = word.value;
+            },
+          ),
+          const SizedBox(height: 24),
+          RaisedButton(
+            child: Text(S.of(context).export, style: const TextStyle(fontSize: 20)),
+            onPressed: () {},
+          ),
+        ],
+      ),
     ),
   );
+
+  Widget menuPopup(MapEntry<String, String> word) {
+    return PopupMenuButton<int>(
+      child: Icon(Icons.settings),
+      itemBuilder: (BuildContext context) => [
+        PopupMenuItem(
+          value: 0,
+          child: Text("Edit"),
+        ),
+        PopupMenuItem(
+          value: 1,
+          child: Text("Delete"),
+        ),
+      ],
+      onSelected: (item) {
+        switch(item) {
+          case 0: {
+            Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
+                builder: (context) => GeneralStatefulWidget(() => EditWord(currentWord: word))
+            )).then((newWord) {
+              if (newWord != null) {
+                wordList.remove(word.key);
+                wordList[newWord.key] = newWord.value;
+              };
+            });
+          }
+          break;
+          case 1: {
+
+            showDialog(context: context,
+                child: AlertDialog(
+                  content: Text(S.of(context).deleteConfirmation(word.key)),
+                  actions: [
+                    FlatButton(
+                      child: Text(S.of(context).no),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    FlatButton(
+                      child: Text(S.of(context).yes),
+                      onPressed: () {
+                        setState(() {
+                          wordList.remove(word.key);
+                        });
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                )
+            );
+          }
+          break;
+        }
+      },
+    );
+  }
 }
 
 class LanguageSelector extends State<GeneralStatefulWidget> {

@@ -21,7 +21,11 @@ class EditWord extends State<GeneralStatefulWidget> {
   EditWord({MapEntry<String, String> currentWord}) :
         newWord = currentWord == null,
         currentWord = currentWord?.key,
-        selectedTranslations = currentWord?.value?.split(("; "))?.toSet() ?? Set();
+        selectedTranslations = currentWord?.value?.split(("; "))?.toSet() ?? Set() {
+    customTranslationListener.text = selectedTranslations.where(
+            (translation) => !translations.containsKey(translation)
+    ).join("\n");
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -34,27 +38,28 @@ class EditWord extends State<GeneralStatefulWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            newWord ? textEntryField : SizedBox(),
+            textEntryField,
             const SizedBox(height: 32),
           ] + translations.entries.map((category) => <Widget>[
             Text(category.key, style: TextStyle(fontSize: 24)),
             const SizedBox(width: 24),
           ] + category.value.entries.map((translation) => Row(
-              children: [
-                Checkbox(
-                  value: selectedTranslations.contains(translation.key),
-                  onChanged: (value) {
-                    setState(() {
-                      if (value) selectedTranslations.add(translation.key);
-                      else selectedTranslations.remove(translation.key);
-                    });
-                  },
-                ),
-                Text(translation.key, style: TextStyle(fontSize: 16)),
-                const SizedBox(width: 16),
-              ] + translation.value.map((backTranslation) => Text(backTranslation,
+            children: [
+              Checkbox(
+                value: selectedTranslations.contains(translation.key),
+                onChanged: (value) {
+                  setState(() {
+                    if (value) selectedTranslations.add(translation.key);
+                    else selectedTranslations.remove(translation.key);
+                  });
+                },
+              ),
+              Text(translation.key, style: TextStyle(fontSize: 16)),
+              const SizedBox(width: 8),
+              Text("(${translation.value.join(",")})",
                 style: TextStyle(fontSize: 16),
-              )).toList()
+              )
+            ],
           )).toList() + [
             TextField(
               controller: customTranslationListener,
@@ -70,15 +75,13 @@ class EditWord extends State<GeneralStatefulWidget> {
               child: RaisedButton(
                 child: Text(S.of(context).saveWord),
                 onPressed: () {
-                  if (currentWord == null) {
-                    Navigator.of(context).pop();
-                    return;
-                  }
-                  selectedTranslations.addAll(customTranslationListener.text.split("\n").where(
+                  final allTranslations = selectedTranslations.toList() + customTranslationListener.text.split("\n").where(
                           (translation) => translation.trim().isNotEmpty
-                  ));
-                  final currentTranslations = selectedTranslations.join("; ");
-                  Navigator.of(context).pop(MapEntry(currentWord, currentTranslations));
+                  ).toList();
+                  if (currentWord != null && allTranslations.isNotEmpty) {
+                    final currentTranslations = allTranslations.join("; ");
+                    Navigator.of(context).pop(MapEntry(currentWord, currentTranslations));
+                  }
                 },
               ),
             ),
@@ -89,6 +92,7 @@ class EditWord extends State<GeneralStatefulWidget> {
   );
 
   Widget get textEntryField => TextField(
+    controller: TextEditingController(text: currentWord ?? ""),
     onChanged: (value) {
       currentWord = value;
     },
