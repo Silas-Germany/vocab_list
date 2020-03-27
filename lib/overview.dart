@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:vocab_list/add_word.dart';
 import 'package:vocab_list/helper.dart';
 
 import 'generated/l10n.dart';
@@ -13,8 +14,8 @@ class Overview extends State<GeneralStatefulWidget> {
   final secondLanguageCodeNotifier = ValueNotifier(availableLanguageCode[1]);
 
   final wordList = {
-    "घर": "house, home",
-    "आदमी": "man, human",
+    "घर": "house; home",
+    "आदमी": "man; human",
   };
 
   @override
@@ -40,7 +41,7 @@ class Overview extends State<GeneralStatefulWidget> {
     ),
     body: Column(
       children: <Widget>[
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -82,14 +83,19 @@ class Overview extends State<GeneralStatefulWidget> {
           );
         },
       )).toList() + [
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         RaisedButton(
-          child: Text(S.of(context).newWord, style: TextStyle(fontSize: 24)),
-          onPressed: () {},
+          child: Text(S.of(context).newWord, style: const TextStyle(fontSize: 24)),
+          onPressed: () async {
+            final word = await Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
+                builder: (context) => GeneralStatefulWidget(() => EditWord())
+            ));
+            wordList[word.key] = word.value;
+          },
         ),
-        SizedBox(height: 24),
+        const SizedBox(height: 24),
         RaisedButton(
-          child: Text(S.of(context).export, style: TextStyle(fontSize: 20)),
+          child: Text(S.of(context).export, style: const TextStyle(fontSize: 20)),
           onPressed: () {},
         ),
       ],
