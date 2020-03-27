@@ -90,7 +90,7 @@ class Overview extends State<GeneralStatefulWidget> {
             final word = await Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
                 builder: (context) => GeneralStatefulWidget(() => EditWord())
             ));
-            wordList[word.key] = word.value;
+            if (word != null) wordList[word.key] = word.value;
           },
         ),
         const SizedBox(height: 24),

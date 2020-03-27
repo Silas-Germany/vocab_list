@@ -16,5 +16,6 @@
 
   "editWord": "Edit '{word}'",
   "enterWord": "Enter new word",
+  "customTranslation": "Custom translations (new line for each)",
   "saveWord": "Save"
 }
