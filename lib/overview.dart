@@ -12,6 +12,11 @@ class Overview extends State<GeneralStatefulWidget> {
   final firstLanguageCodeNotifier = ValueNotifier(availableLanguageCode[0]);
   final secondLanguageCodeNotifier = ValueNotifier(availableLanguageCode[1]);
 
+  final wordList = {
+    "घर": "house, home",
+    "आदमी": "man, human",
+  };
+
   @override
   void initState() {
     super.initState();
@@ -34,7 +39,7 @@ class Overview extends State<GeneralStatefulWidget> {
       title: Text(S.of(context).overview),
     ),
     body: Column(
-      children: [
+      children: <Widget>[
         SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -43,6 +48,49 @@ class Overview extends State<GeneralStatefulWidget> {
             Text("->", style: TextStyle(fontSize: 24)),
             GeneralStatefulWidget(() => LanguageSelector(secondLanguageCodeNotifier)),
           ],
+        ),
+      ] + wordList.entries.map((word) => GestureDetector(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Text(word.key, style: TextStyle(fontSize: 20)),
+            Text(word.value, style: TextStyle(fontSize: 20)),
+          ],
+        ),
+        onLongPress: () {
+          showDialog(context: context,
+              child: AlertDialog(
+                content: Text(S.of(context).deleteConfirmation(word.key)),
+                actions: [
+                  FlatButton(
+                    child: Text(S.of(context).no),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  FlatButton(
+                    child: Text(S.of(context).yes),
+                    onPressed: () {
+                      setState(() {
+                        wordList.remove(word.key);
+                      });
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              )
+          );
+        },
+      )).toList() + [
+        SizedBox(height: 16),
+        RaisedButton(
+          child: Text(S.of(context).newWord, style: TextStyle(fontSize: 24)),
+          onPressed: () {},
+        ),
+        SizedBox(height: 24),
+        RaisedButton(
+          child: Text(S.of(context).export, style: TextStyle(fontSize: 20)),
+          onPressed: () {},
         ),
       ],
     ),
