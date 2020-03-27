@@ -6,6 +6,9 @@
 
   "english": "English",
   "hindi": "Hindi",
+  "german": "German",
+  "russish": "Russish",
+  "cantoneese": "Cantoneese",
 
   "newWord": "New word",
   "export": "Export to Anki",

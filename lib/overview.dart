@@ -8,10 +8,17 @@ import 'generated/l10n.dart';
 
 class Overview extends State<GeneralStatefulWidget> {
 
-  static const availableLanguageCode = ["en", "hi"];
+  static const availableLanguageCode = [
+    "en",
+    "hi",
+    "de",
+    "ru",
+    "zh-TW",
+  ];
 
-  final firstLanguageCodeNotifier = ValueNotifier(availableLanguageCode[0]);
-  final secondLanguageCodeNotifier = ValueNotifier(availableLanguageCode[1]);
+  final languageCode1Notifier = ValueNotifier(availableLanguageCode[1]);
+  final languageCode2Notifier = ValueNotifier(availableLanguageCode[0]);
+  MapEntry<String, String> get languageCodes => MapEntry(languageCode1Notifier.value, languageCode2Notifier.value);
 
   final wordList = {
     "घर": "house; home",
@@ -21,16 +28,16 @@ class Overview extends State<GeneralStatefulWidget> {
   @override
   void initState() {
     super.initState();
-    firstLanguageCodeNotifier.addListener(() {
-      if (firstLanguageCodeNotifier.value == secondLanguageCodeNotifier.value) {
-        final sameCode = firstLanguageCodeNotifier.value;
-        secondLanguageCodeNotifier.value = availableLanguageCode.firstWhere((code) => code != sameCode);
+    languageCode1Notifier.addListener(() {
+      if (languageCode1Notifier.value == languageCode2Notifier.value) {
+        final sameCode = languageCode1Notifier.value;
+        languageCode2Notifier.value = availableLanguageCode.firstWhere((code) => code != sameCode);
       } else setState(() {});
     });
-    secondLanguageCodeNotifier.addListener(() {
-      if (firstLanguageCodeNotifier.value == secondLanguageCodeNotifier.value) {
-        final sameCode = firstLanguageCodeNotifier.value;
-        firstLanguageCodeNotifier.value = availableLanguageCode.firstWhere((code) => code != sameCode);
+    languageCode2Notifier.addListener(() {
+      if (languageCode1Notifier.value == languageCode2Notifier.value) {
+        final sameCode = languageCode1Notifier.value;
+        languageCode1Notifier.value = availableLanguageCode.firstWhere((code) => code != sameCode);
       } else setState(() {});
     });
   }
@@ -46,9 +53,9 @@ class Overview extends State<GeneralStatefulWidget> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              GeneralStatefulWidget(() => LanguageSelector(firstLanguageCodeNotifier)),
+              GeneralStatefulWidget(() => LanguageSelector(languageCode1Notifier)),
               Text("->", style: TextStyle(fontSize: 24)),
-              GeneralStatefulWidget(() => LanguageSelector(secondLanguageCodeNotifier)),
+              GeneralStatefulWidget(() => LanguageSelector(languageCode2Notifier)),
             ],
           ),
           Table(
@@ -82,7 +89,7 @@ class Overview extends State<GeneralStatefulWidget> {
             child: Text(S.of(context).newWord, style: const TextStyle(fontSize: 24)),
             onPressed: () async {
               final word = await Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
-                  builder: (context) => GeneralStatefulWidget(() => EditWord())
+                  builder: (context) => GeneralStatefulWidget(() => EditWord(languageCodes))
               ));
               if (word != null) wordList[word.key] = word.value;
             },
@@ -114,7 +121,7 @@ class Overview extends State<GeneralStatefulWidget> {
         switch(item) {
           case 0: {
             Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
-                builder: (context) => GeneralStatefulWidget(() => EditWord(currentWord: word))
+                builder: (context) => GeneralStatefulWidget(() => EditWord(languageCodes, word: word))
             )).then((newWord) {
               if (newWord != null) {
                 wordList.remove(word.key);
@@ -163,21 +170,23 @@ class LanguageSelector extends State<GeneralStatefulWidget> {
 
   static const dropDownStyle = TextStyle(fontSize: 22);
 
-  @override Widget build(BuildContext context) =>
-      DropdownButton<String>(
-        value: languageCodeNotifier.value,
-        items: [
-          DropdownMenuItem(
-            value: "en",
-            child: Text(S.of(context).english, style: dropDownStyle),
-          ),
-          DropdownMenuItem(
-            value: "hi",
-            child: Text(S.of(context).hindi, style: dropDownStyle),
-          ),
-        ],
-        onChanged: (String value) {
-          languageCodeNotifier.value = value;
-        },
-      );
+  @override Widget build(BuildContext context) {
+    final availableLanguages = {
+      "en": S.of(context).english,
+      "hi": S.of(context).hindi,
+      "de": S.of(context).german,
+      "ru": S.of(context).russish,
+      "zh-TW": S.of(context).cantoneese,
+    };
+    return DropdownButton<String>(
+      value: languageCodeNotifier.value,
+      items: availableLanguages.entries.map((language) => DropdownMenuItem(
+        value: language.key,
+        child: Text(language.value, style: dropDownStyle),
+      )).toList(),
+      onChanged: (String value) {
+        languageCodeNotifier.value = value;
+      },
+    );
+  }
 }

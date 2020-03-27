@@ -1,6 +1,9 @@
 
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 import 'generated/l10n.dart';
 import 'helper.dart';
@@ -9,23 +12,36 @@ class EditWord extends State<GeneralStatefulWidget> {
 
   String currentWord;
   final bool newWord;
-  final Set<String> selectedTranslations;
-  final Map<String, Map<String, List<String>>> translations = {
-    "Noun": {
-      "house": ["घर"],
-      "home": ["घर"],
-    }
-  };
+  final Set<String> selectedTranslations = Set();
+  String mainTranslation;
+  Map<String, Map<String, List<String>>> translations = {};
   final customTranslationListener = TextEditingController();
+  final languageCode1;
+  final languageCode2;
+  final wordEntryController;
 
-  EditWord({MapEntry<String, String> currentWord}) :
-        newWord = currentWord == null,
-        currentWord = currentWord?.key,
-        selectedTranslations = currentWord?.value?.split(("; "))?.toSet() ?? Set() {
-    customTranslationListener.text = selectedTranslations.where(
-            (translation) => !translations.containsKey(translation)
-    ).join("\n");
+  EditWord(MapEntry<String, String> languageCodes, {MapEntry<String, String> word}) :
+        newWord = word == null,
+        currentWord = word?.key,
+        languageCode1 = languageCodes.key,
+        languageCode2 = languageCodes.value,
+        wordEntryController = TextEditingController(text: word?.key ?? "") {
+    init(word.value);
   }
+
+  init(String previousTranslations) async {
+    if (!newWord) await updateWord(currentWord);
+    previousTranslations?.split("; ")?.forEach((translation) {
+      if (translations.values.any((existingTranslations) => existingTranslations.containsKey(translation))) {
+        selectedTranslations.add(translation);
+      } else {
+        if (customTranslationListener.text.isNotEmpty) customTranslationListener.text += "\n";
+        customTranslationListener.text += translation;
+      }
+    });
+    return super.initState();
+  }
+
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -40,36 +56,21 @@ class EditWord extends State<GeneralStatefulWidget> {
           children: [
             textEntryField,
             const SizedBox(height: 32),
+            translationField(mainTranslation)
           ] + translations.entries.map((category) => <Widget>[
             Text(category.key, style: TextStyle(fontSize: 24)),
             const SizedBox(width: 24),
-          ] + category.value.entries.map((translation) => Row(
-            children: [
-              Checkbox(
-                value: selectedTranslations.contains(translation.key),
-                onChanged: (value) {
-                  setState(() {
-                    if (value) selectedTranslations.add(translation.key);
-                    else selectedTranslations.remove(translation.key);
-                  });
-                },
-              ),
-              Text(translation.key, style: TextStyle(fontSize: 16)),
-              const SizedBox(width: 8),
-              Text("(${translation.value.join(",")})",
-                style: TextStyle(fontSize: 16),
-              )
-            ],
-          )).toList() + [
-            TextField(
+          ] + category.value.entries.map(
+                  (translation) => translationField(translation.key, backTranslations: translation.value)
+          ).toList(),
+          ).expand((entry) => entry).toList() + [
+            currentWord?.isEmpty != false ? SizedBox() : TextField(
               controller: customTranslationListener,
               maxLines: null,
               decoration: InputDecoration(
                 hintText: S.of(context).customTranslation,
               ),
-            )
-          ],
-          ).expand((entry) => entry).toList() + [
+            ),
             SizedBox(height: 32),
             Center(
               child: RaisedButton(
@@ -92,13 +93,62 @@ class EditWord extends State<GeneralStatefulWidget> {
   );
 
   Widget get textEntryField => TextField(
-    controller: TextEditingController(text: currentWord ?? ""),
-    onChanged: (value) {
-      currentWord = value;
-    },
+    autofocus: true,
+    controller: wordEntryController,
+    onChanged: (value) => updateWord(value),
     decoration: InputDecoration(
         hintText: S.of(context).enterWord,
         border: OutlineInputBorder()
     ),
   );
+
+  Widget translationField(String translation, {List<String> backTranslations}) {
+    if (translation == null) return SizedBox();
+    final checkboxValue = selectedTranslations.contains(translation);
+    return InkWell(
+      child: Row(
+        children: [
+          Checkbox(
+            value: selectedTranslations.contains(translation),
+            onChanged: (_) {},
+          ),
+          Text(translation, style: TextStyle(fontSize: 16)),
+          const SizedBox(width: 8),
+          backTranslations == null ? SizedBox() : Expanded(
+            child: Text("(${backTranslations.join(", ")})",
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+        ],
+      ),
+      onTap: () {
+        setState(() {
+          if (!checkboxValue) selectedTranslations.add(translation);
+          else selectedTranslations.remove(translation);
+        });
+      },
+    );
+  }
+
+  updateWord(word) async {
+    final response = await http.get("https://translate.googleapis.com/translate_a/single?client=gtx&sl="
+        "$languageCode1&tl=$languageCode2&dt=bd&dt=t&q=$word");
+    setState(() {
+      translations.clear();
+      selectedTranslations.clear();
+      final List<dynamic> jsonResponse = json.decode(response.body);
+      mainTranslation = ((jsonResponse[0] as List<dynamic>)?.first as List<dynamic>)?.first;
+      selectedTranslations.add(mainTranslation);
+      (jsonResponse[1] as List<dynamic>)?.forEach((gTranslation) {
+        final String category = gTranslation[0];
+        translations[category] = {};
+        (gTranslation[2] as List<dynamic>).forEach((translationAndBack) {
+          final String translation = translationAndBack[0];
+          final List<dynamic> backTranslations = translationAndBack[1];
+          translations[category][translation] = backTranslations.map((entry) => entry as String).toList();
+        });
+      });
+      currentWord = word;
+    });
+  }
 }
