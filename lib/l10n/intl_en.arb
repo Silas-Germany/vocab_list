@@ -7,12 +7,14 @@
   "english": "English",
   "hindi": "Hindi",
   "german": "German",
-  "russish": "Russish",
-  "cantoneese": "Cantoneese",
+  "russian": "Russian",
+  "cantonese": "Cantonese",
 
   "newWord": "New word",
   "export": "Export to Anki",
 
+  "edit" : "Edit",
+  "delete" : "Delete",
   "deleteConfirmation" : "Do you want to delete '{word}'?",
   "yes": "Yes",
   "no": "No",

@@ -1,6 +1,10 @@
+import 'dart:io';
+
+import 'package:csv/csv.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:vocab_list/add_word.dart';
 import 'package:vocab_list/helper.dart';
 
@@ -20,33 +24,61 @@ class Overview extends State<GeneralStatefulWidget> {
   final languageCode2Notifier = ValueNotifier(availableLanguageCode[0]);
   MapEntry<String, String> get languageCodes => MapEntry(languageCode1Notifier.value, languageCode2Notifier.value);
 
-  final wordList = {
-    "घर": "house; home",
-    "आदमी": "man; human",
-  };
+  Map<String, String> wordList;
+  Directory directory;
 
   @override
   void initState() {
     super.initState();
+    getWordList();
     languageCode1Notifier.addListener(() {
       if (languageCode1Notifier.value == languageCode2Notifier.value) {
         final sameCode = languageCode1Notifier.value;
         languageCode2Notifier.value = availableLanguageCode.firstWhere((code) => code != sameCode);
-      } else setState(() {});
+      } else setState(() {
+        wordList = null;
+        getWordList();
+      });
     });
     languageCode2Notifier.addListener(() {
       if (languageCode1Notifier.value == languageCode2Notifier.value) {
         final sameCode = languageCode1Notifier.value;
         languageCode1Notifier.value = availableLanguageCode.firstWhere((code) => code != sameCode);
-      } else setState(() {});
+      } else {
+        setState(() {
+          wordList = null;
+        });
+        getWordList();
+      }
     });
+  }
+
+  getWordList() async{
+    if (directory == null) directory = await getExternalStorageDirectory();
+    final wordFile = File("${directory.path}/${languageCode1Notifier.value}-${languageCode2Notifier.value}.csv");
+    wordList = {};
+    if (!await wordFile.exists()) return setState(() {});
+    CsvToListConverter().convert(await wordFile.readAsString()).forEach((line) {
+      final wordParts = line.map((word) => word.toString()).toList();
+      wordList[wordParts[0]] = wordParts[1];
+    });
+    setState(() {});
+  }
+
+  saveWordList() async{
+    if (directory == null) directory = await getExternalStorageDirectory();
+    final wordFile = File("${directory.path}/${languageCode1Notifier.value}-${languageCode2Notifier.value}.csv");
+    if (!wordFile.existsSync()) wordFile.createSync();
+    wordFile.writeAsStringSync(
+        ListToCsvConverter().convert(wordList.entries.map((entry) => [entry.key, entry.value]).toList())
+    );
   }
 
   @override Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
       title: Text(S.of(context).overview),
     ),
-    body: SingleChildScrollView(
+    body: wordList == null ? Center(child: CircularProgressIndicator()) : SingleChildScrollView(
       child: Column(
         children: <Widget>[
           const SizedBox(height: 16),
@@ -91,7 +123,10 @@ class Overview extends State<GeneralStatefulWidget> {
               final word = await Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
                   builder: (context) => GeneralStatefulWidget(() => EditWord(languageCodes))
               ));
-              if (word != null) wordList[word.key] = word.value;
+              if (word != null) {
+                wordList[word.key] = word.value;
+                saveWordList();
+              }
             },
           ),
           const SizedBox(height: 24),
@@ -110,11 +145,11 @@ class Overview extends State<GeneralStatefulWidget> {
       itemBuilder: (BuildContext context) => [
         PopupMenuItem(
           value: 0,
-          child: Text("Edit"),
+          child: Text(S.of(context).edit),
         ),
         PopupMenuItem(
           value: 1,
-          child: Text("Delete"),
+          child: Text(S.of(context).delete),
         ),
       ],
       onSelected: (item) {
@@ -126,6 +161,7 @@ class Overview extends State<GeneralStatefulWidget> {
               if (newWord != null) {
                 wordList.remove(word.key);
                 wordList[newWord.key] = newWord.value;
+                saveWordList();
               };
             });
           }
@@ -175,8 +211,8 @@ class LanguageSelector extends State<GeneralStatefulWidget> {
       "en": S.of(context).english,
       "hi": S.of(context).hindi,
       "de": S.of(context).german,
-      "ru": S.of(context).russish,
-      "zh-TW": S.of(context).cantoneese,
+      "ru": S.of(context).russian,
+      "zh-TW": S.of(context).cantonese,
     };
     return DropdownButton<String>(
       value: languageCodeNotifier.value,

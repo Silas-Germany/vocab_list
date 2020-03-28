@@ -25,23 +25,24 @@ class EditWord extends State<GeneralStatefulWidget> {
         currentWord = word?.key,
         languageCode1 = languageCodes.key,
         languageCode2 = languageCodes.value,
-        wordEntryController = TextEditingController(text: word?.key ?? "") {
-    init(word.value);
+        wordEntryController = TextEditingController(text: word?.key ?? "")
+  {
+    init(word?.value);
   }
 
   init(String previousTranslations) async {
     if (!newWord) await updateWord(currentWord);
     previousTranslations?.split("; ")?.forEach((translation) {
-      if (translations.values.any((existingTranslations) => existingTranslations.containsKey(translation))) {
+      final existsInDownloaded = translation == mainTranslation ||
+          translations.values.any((existingTranslations) => existingTranslations.containsKey(translation));
+      if (existsInDownloaded) {
         selectedTranslations.add(translation);
       } else {
         if (customTranslationListener.text.isNotEmpty) customTranslationListener.text += "\n";
         customTranslationListener.text += translation;
       }
     });
-    return super.initState();
   }
-
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -93,7 +94,7 @@ class EditWord extends State<GeneralStatefulWidget> {
   );
 
   Widget get textEntryField => TextField(
-    autofocus: true,
+    autofocus: newWord,
     controller: wordEntryController,
     onChanged: (value) => updateWord(value),
     decoration: InputDecoration(
