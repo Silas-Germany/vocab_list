@@ -48,6 +48,20 @@ class EditWord extends State<GeneralStatefulWidget> {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
       title: Text(newWord ? S.of(context).newWord : S.of(context).editWord(currentWord)),
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.check),
+          onPressed: () {
+            final allTranslations = selectedTranslations.toList() + customTranslationListener.text.split("\n").where(
+                    (translation) => translation.trim().isNotEmpty
+            ).toList();
+            if (currentWord != null && allTranslations.isNotEmpty) {
+              final currentTranslations = allTranslations.join("; ");
+              Navigator.of(context).pop(MapEntry(currentWord, currentTranslations));
+            }
+          },
+        ),
+      ],
     ),
     body: SingleChildScrollView(
       child: Padding(
@@ -72,21 +86,6 @@ class EditWord extends State<GeneralStatefulWidget> {
                 hintText: S.of(context).customTranslation,
               ),
             ),
-            SizedBox(height: 32),
-            Center(
-              child: RaisedButton(
-                child: Text(S.of(context).saveWord),
-                onPressed: () {
-                  final allTranslations = selectedTranslations.toList() + customTranslationListener.text.split("\n").where(
-                          (translation) => translation.trim().isNotEmpty
-                  ).toList();
-                  if (currentWord != null && allTranslations.isNotEmpty) {
-                    final currentTranslations = allTranslations.join("; ");
-                    Navigator.of(context).pop(MapEntry(currentWord, currentTranslations));
-                  }
-                },
-              ),
-            ),
           ],
         ),
       ),
@@ -106,21 +105,25 @@ class EditWord extends State<GeneralStatefulWidget> {
   Widget translationField(String translation, {List<String> backTranslations}) {
     if (translation == null) return SizedBox();
     final checkboxValue = selectedTranslations.contains(translation);
+    final checkbox = checkboxValue
+        ? Icon(Icons.check_box, color: Colors.blue)
+        : Icon(Icons.check_box_outline_blank, color: Colors.blue);
     return InkWell(
-      child: Row(
-        children: [
-          Checkbox(
-            value: selectedTranslations.contains(translation),
-            onChanged: (_) {},
-          ),
-          Text(translation, style: TextStyle(fontSize: 16)),
-          const SizedBox(width: 8),
-          backTranslations == null ? SizedBox() : Expanded(
-            child: Text("(${backTranslations.join(", ")})",
-              style: TextStyle(fontSize: 16),
+      child: Padding(
+        padding: EdgeInsets.all(4),
+        child: Row(
+          children: [
+            checkbox,
+            const SizedBox(width: 8),
+            Text(translation, style: TextStyle(fontSize: 16)),
+            const SizedBox(width: 8),
+            backTranslations == null ? SizedBox() : Expanded(
+              child: Text("(${backTranslations.join(", ")})",
+                style: TextStyle(fontSize: 16),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       onTap: () {
         setState(() {
