@@ -1,4 +1,5 @@
 
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
@@ -10,15 +11,20 @@ import 'helper.dart';
 
 class EditWord extends State<GeneralStatefulWidget> {
 
+  static const inputMethods = {
+    "hi": "hi-t-i0-und"
+  };
+
   String currentWord;
   final bool newWord;
   final Set<String> selectedTranslations = Set();
   String mainTranslation;
   Map<String, Map<String, List<String>>> translations = {};
   final customTranslationListener = TextEditingController();
-  final languageCode1;
-  final languageCode2;
-  final wordEntryController;
+  final String languageCode1;
+  final String languageCode2;
+  final TextEditingController wordEntryController;
+  Timer textChangedTimer;
 
   EditWord(MapEntry<String, String> languageCodes, {MapEntry<String, String> word}) :
         newWord = word == null,
@@ -92,15 +98,44 @@ class EditWord extends State<GeneralStatefulWidget> {
     ),
   );
 
-  Widget get textEntryField => TextField(
+  Widget get textEntryField => Builder(builder: (context) => TextField(
     autofocus: newWord,
     controller: wordEntryController,
-    onChanged: (value) => updateWord(value),
+    onChanged: (value) {
+      textChangedTimer?.cancel();
+      if (value?.isNotEmpty ?? false) {
+        if (inputMethods[languageCode1] == null) {
+          updateWord(value);
+          return;
+        }
+        textChangedTimer = Timer(Duration(seconds: 1), () async {
+          final response = await http.get("https://inputtools.google.com/request?itc=${inputMethods[languageCode1]}&num=4&text=$value");
+          final List<dynamic> jsonResponse = json.decode(response.body);
+          final List<dynamic> gInput = ((jsonResponse[1] as List<dynamic>)[0] as List<dynamic>)[1];
+          textChangedTimer = null;
+          final RenderBox renderBox = context.findRenderObject();
+          final offset = renderBox.localToGlobal(Offset.zero);
+          final position = RelativeRect.fromLTRB(offset.dx, offset.dy + renderBox.size.height, offset.dx, 0);
+          showMenu<String>(
+            context: context,
+            position: position,
+            items: gInput.map((gWord) => PopupMenuItem(
+              value: gWord.toString(),
+              child: Text(gWord),
+            )
+            ).toList(),
+          ).then((String selected) {
+            wordEntryController.text = selected;
+            updateWord(selected ?? value);
+          });
+        });
+      }
+    },
     decoration: InputDecoration(
         hintText: S.of(context).enterWord,
         border: OutlineInputBorder()
     ),
-  );
+  ));
 
   Widget translationField(String translation, {List<String> backTranslations}) {
     if (translation == null) return SizedBox();
