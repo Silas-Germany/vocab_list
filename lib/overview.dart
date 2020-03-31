@@ -18,6 +18,8 @@ class Overview extends State<GeneralStatefulWidget> {
 
   final languageCode1Notifier = ValueNotifier(availableLanguageCode[1]);
   final languageCode2Notifier = ValueNotifier(availableLanguageCode[0]);
+
+  final scrollController = ScrollController();
   MapEntry<String, String> get languageCodes => MapEntry(languageCode1Notifier.value, languageCode2Notifier.value);
 
   Map<String, String> wordList;
@@ -64,6 +66,7 @@ class Overview extends State<GeneralStatefulWidget> {
             if (word != null) {
               wordList[word.key] = word.value;
               Csv.saveWordList(languageCodes, wordList);
+              scrollController.jumpTo(0);
             }
           },
         ),
@@ -91,45 +94,50 @@ class Overview extends State<GeneralStatefulWidget> {
         ),
         Expanded(
           child: ListView.builder(
+            controller: scrollController,
             itemCount: wordList.length,
-            itemBuilder: (context, index) => InkWell(
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 6,
-                    child: Row(
-                      children: <Widget>[
-                        SizedBox(width: 8),
-                        menuPopup(wordList.entries.toList()[index]),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(wordList.entries.toList()[index].key, style: TextStyle(fontSize: 20)),
-                        ),
-                      ],
+            itemBuilder: (context, index) {
+              final entry = wordList.entries.toList().reversed.toList()[index];
+              return InkWell(
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 6,
+                      child: Row(
+                        children: <Widget>[
+                          SizedBox(width: 8),
+                          menuPopup(entry),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(entry.key, style: TextStyle(fontSize: 20)),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    flex: 10,
-                    child: Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Text(wordList.entries.toList()[index].value, style: TextStyle(fontSize: 20)),
+                    Expanded(
+                      flex: 10,
+                      child: Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Text(entry.value, style: TextStyle(fontSize: 20)),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              onLongPress: () {
-                Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
-                    builder: (context) => GeneralStatefulWidget(() => EditWord(languageCodes, word: wordList.entries.toList()[index]))
-                )).then((newWord) {
-                  if (newWord != null) {
-                    wordList.remove(wordList.entries.toList()[index].key);
-                    wordList[newWord.key] = newWord.value;
-                    Csv.saveWordList(languageCodes, wordList);
-                  };
-                });
-              }
-              ,
-            ),
+                  ],
+                ),
+                onLongPress: () {
+                  Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
+                      builder: (context) => GeneralStatefulWidget(() => EditWord(languageCodes, word: entry))
+                  )).then((newWord) {
+                    if (newWord != null) {
+                      wordList.remove(entry.key);
+                      wordList[newWord.key] = newWord.value;
+                      Csv.saveWordList(languageCodes, wordList);
+                      scrollController.jumpTo(0);
+                    };
+                  });
+                }
+                ,
+              );
+            },
           ),
         ),
       ],
