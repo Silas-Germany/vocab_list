@@ -6,6 +6,12 @@ import 'package:vocab_list/helper.dart';
 
 import 'generated/l10n.dart';
 
+enum Order {
+  added,
+  word,
+  translation,
+}
+
 class Overview extends State<GeneralStatefulWidget> {
 
   static const availableLanguageCode = [
@@ -18,6 +24,7 @@ class Overview extends State<GeneralStatefulWidget> {
 
   final languageCode1Notifier = ValueNotifier(availableLanguageCode[1]);
   final languageCode2Notifier = ValueNotifier(availableLanguageCode[0]);
+  Order order = Order.added;
 
   MapEntry<String, String> get languageCodes => MapEntry(languageCode1Notifier.value, languageCode2Notifier.value);
 
@@ -54,8 +61,17 @@ class Overview extends State<GeneralStatefulWidget> {
 
   @override Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text(S.of(context).overview(wordList?.length ?? "?")),
+      title: Text(S.of(context).overview(wordList?.length ?? "?", order.toString().split(".").last), overflow: TextOverflow.fade,),
       actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.sort),
+          onPressed: () {
+            setState(() {
+              order = Order.values[(order.index + 1) % Order.values.length];
+              wordList.forEach((entry) => AnkiConverter.downloadSoundFile(entry.key, languageCodes.key));
+            });
+          },
+        ),
         IconButton(
           icon: Icon(Icons.add),
           onPressed: () async {
@@ -72,7 +88,7 @@ class Overview extends State<GeneralStatefulWidget> {
               else setState(() {
                 wordList.insert(0, newWord);
                 AnkiConverter.saveWordList(languageCodes, wordList);
-                AnkiConverter().downloadSoundFile(newWord.key, languageCodes.key);
+                AnkiConverter.downloadSoundFile(newWord.key, languageCodes.key);
               });
             }
           },
@@ -103,7 +119,18 @@ class Overview extends State<GeneralStatefulWidget> {
           child: ListView.builder(
             itemCount: wordList.length,
             itemBuilder: (context, index) {
-              final entry = wordList[index];
+              final sortedWordList = wordList.toList(growable: false);
+              switch(order) {
+                case Order.added:
+                  break;
+                case Order.word:
+                  sortedWordList.sort((entry1, entry2) => entry1.key.compareTo(entry2.key));
+                  break;
+                case Order.translation:
+                  sortedWordList.sort((entry1, entry2) => entry1.value.compareTo(entry2.value));
+                  break;
+              }
+              final entry = sortedWordList[index];
               return InkWell(
                 child: Row(
                   children: [
@@ -143,7 +170,7 @@ class Overview extends State<GeneralStatefulWidget> {
                       else setState(() {
                         wordList[wordList.indexOf(entry)] = newWord;
                         AnkiConverter.saveWordList(languageCodes, wordList);
-                        AnkiConverter().downloadSoundFile(newWord.key, languageCodes.key);
+                        AnkiConverter.downloadSoundFile(newWord.key, languageCodes.key);
                       });
                     };
                   });

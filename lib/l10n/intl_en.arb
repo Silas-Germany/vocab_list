@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
 
-  "overview": "Overview ({count} words)",
+  "overview": "Overview ({count} words, {order})",
   "addWord": "Add Word",
 
   "english": "English",

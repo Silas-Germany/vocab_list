@@ -12,7 +12,7 @@ class GeneralStatefulWidget extends StatefulWidget {
   @override State<StatefulWidget> createState() => generateState();
 }
 
-class AnkiConverter {
+abstract class AnkiConverter {
 
   static Directory directory;
 
@@ -48,11 +48,10 @@ class AnkiConverter {
     "hi": MapEntry("hi-IN-Wavenet-A", "FEMALE"),
   };
 
-  downloadSoundFile(String word, String languageCode) async {
+  static downloadSoundFile(String word, String languageCode) async {
     if (directory == null) directory = await getExternalStorageDirectory();
     final mp3File = File("${directory.path}/sound_files_$languageCode/$word.mp3");
     if (mp3File.existsSync()) return;
-    final headers = {"content-type": "application/json"};
     final voice = voices[languageCode].key;
     final gender = voices[languageCode].value;
     final code = voice.substring(0, 5);
@@ -69,10 +68,9 @@ class AnkiConverter {
         "audioEncoding":"MP3",
       },
     };
+    final headers = {"content-type": "application/json"};
     final response = await post(url, headers: headers, body: jsonEncode(body));
     final Map<String, dynamic> jsonResponse = json.decode(response.body);
-    print(body);
-    print(jsonResponse);
     final mp3Data = base64Decode(jsonResponse["audioContent"]);
     mp3File.writeAsBytes(mp3Data);
   }
