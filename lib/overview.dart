@@ -45,7 +45,7 @@ class Overview extends State<GeneralStatefulWidget> {
     setState(() {
       wordList = null;
     });
-    Csv.getWordList(languageCodes).then((list) {
+    AnkiConverter.getWordList(languageCodes).then((list) {
       setState(() {
         wordList = list;
       });
@@ -59,13 +59,20 @@ class Overview extends State<GeneralStatefulWidget> {
         IconButton(
           icon: Icon(Icons.add),
           onPressed: () async {
-            final word = await Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
+            final newWord = await Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
                 builder: (context) => GeneralStatefulWidget(() => EditWord(languageCodes))
             ));
-            if (word != null) {
-              setState(() {
-                wordList.insert(0, word);
-                Csv.saveWordList(languageCodes, wordList);
+            if (newWord != null) {
+              if (wordList.any((word) => word.key == newWord.key)) showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  content: Text(S.of(context).existed),
+                ),
+              );
+              else setState(() {
+                wordList.insert(0, newWord);
+                AnkiConverter.saveWordList(languageCodes, wordList);
+                AnkiConverter().downloadSoundFile(newWord.key, languageCodes.key);
               });
             }
           },
@@ -127,14 +134,20 @@ class Overview extends State<GeneralStatefulWidget> {
                       builder: (context) => GeneralStatefulWidget(() => EditWord(languageCodes, word: entry))
                   )).then((newWord) {
                     if (newWord != null) {
-                      setState(() {
+                      if (newWord.key != entry.key && wordList.any((word) => word.key == newWord.key)) showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          content: Text(S.of(context).existed),
+                        ),
+                      );
+                      else setState(() {
                         wordList[wordList.indexOf(entry)] = newWord;
-                        Csv.saveWordList(languageCodes, wordList);
+                        AnkiConverter.saveWordList(languageCodes, wordList);
+                        AnkiConverter().downloadSoundFile(newWord.key, languageCodes.key);
                       });
                     };
                   });
-                }
-                ,
+                },
               );
             },
           ),
@@ -161,7 +174,7 @@ class Overview extends State<GeneralStatefulWidget> {
                 onPressed: () {
                   setState(() {
                     wordList.remove(word);
-                    Csv.saveWordList(languageCodes, wordList);
+                    AnkiConverter.saveWordList(languageCodes, wordList);
                   });
                   Navigator.of(context).pop();
                 },

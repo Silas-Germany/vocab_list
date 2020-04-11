@@ -12,6 +12,7 @@
 
   "newWord": "New word",
   "export": "Export to Anki",
+  "existed": "Word existed already",
 
   "edit" : "Edit",
   "delete" : "Delete",

@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
+import 'package:http/http.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:vocab_list/secrets.dart';
 
 class GeneralStatefulWidget extends StatefulWidget {
   final State<GeneralStatefulWidget> Function() generateState;
@@ -9,7 +12,7 @@ class GeneralStatefulWidget extends StatefulWidget {
   @override State<StatefulWidget> createState() => generateState();
 }
 
-class Csv {
+class AnkiConverter {
 
   static Directory directory;
 
@@ -33,10 +36,44 @@ class Csv {
     final wordFile = File("${directory.path}/${languageCodes.key}-${languageCodes.value}.txt");
     if (!wordFile.existsSync()) wordFile.createSync();
     int index = 100;
-    wordFile.writeAsStringSync(
+    wordFile.writeAsString(
         wordList.map((entry) => [entry.key, entry.value, soundFile(entry), index++].join("\t")).join("\n")
     );
   }
 
   static String soundFile(MapEntry<String, String> word) => "[sound:${word.key}.mp3]";
+
+  static const url = "https://texttospeech.googleapis.com/v1/text:synthesize?key=$apiKey";
+  static const voices = {
+    "hi": MapEntry("hi-IN-Wavenet-A", "FEMALE"),
+  };
+
+  downloadSoundFile(String word, String languageCode) async {
+    if (directory == null) directory = await getExternalStorageDirectory();
+    final mp3File = File("${directory.path}/sound_files_$languageCode/$word.mp3");
+    if (mp3File.existsSync()) return;
+    final headers = {"content-type": "application/json"};
+    final voice = voices[languageCode].key;
+    final gender = voices[languageCode].value;
+    final code = voice.substring(0, 5);
+    final body = {
+      "input": {
+        "text": word,
+      },
+      "voice": {
+        "languageCode": code,
+        "name": voice,
+        "ssmlGender": gender,
+      },
+      "audioConfig": {
+        "audioEncoding":"MP3",
+      },
+    };
+    final response = await post(url, headers: headers, body: jsonEncode(body));
+    final Map<String, dynamic> jsonResponse = json.decode(response.body);
+    print(body);
+    print(jsonResponse);
+    final mp3Data = base64Decode(jsonResponse["audioContent"]);
+    mp3File.writeAsBytes(mp3Data);
+  }
 }

@@ -8,3 +8,4 @@
 
 /.idea/
 /lib/generated/
+/lib/secrets.dart
