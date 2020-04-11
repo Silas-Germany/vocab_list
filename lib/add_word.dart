@@ -33,12 +33,14 @@ class EditWord extends State<GeneralStatefulWidget> {
         languageCode2 = languageCodes.value,
         wordEntryController = TextEditingController(text: word?.key ?? "")
   {
-    init(word?.value);
+    init(word?.value?.split("; "));
   }
 
-  init(String previousTranslations) async {
-    if (!newWord) await updateWord(currentWord);
-    previousTranslations?.split("; ")?.forEach((translation) {
+  init(List<String> previousTranslations) async {
+    if (newWord) return;
+    await updateWord(currentWord);
+    if (!previousTranslations.contains(mainTranslation)) selectedTranslations.remove(mainTranslation);
+    previousTranslations.forEach((translation) {
       final existsInDownloaded = translation == mainTranslation ||
           translations.values.any((existingTranslations) => existingTranslations.containsKey(translation));
       if (existsInDownloaded) {
@@ -71,7 +73,7 @@ class EditWord extends State<GeneralStatefulWidget> {
     ),
     body: SingleChildScrollView(
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -79,13 +81,13 @@ class EditWord extends State<GeneralStatefulWidget> {
             const SizedBox(height: 32),
             translationField(mainTranslation)
           ] + translations.entries.map((category) => <Widget>[
-            Text(category.key, style: TextStyle(fontSize: 24)),
+            Text(category.key, style: const TextStyle(fontSize: 24)),
             const SizedBox(width: 24),
           ] + category.value.entries.map(
                   (translation) => translationField(translation.key, backTranslations: translation.value)
           ).toList(),
           ).expand((entry) => entry).toList() + [
-            currentWord?.isEmpty != false ? SizedBox() : TextField(
+            currentWord?.isEmpty != false ? const SizedBox() : TextField(
               controller: customTranslationListener,
               maxLines: null,
               decoration: InputDecoration(
@@ -108,7 +110,7 @@ class EditWord extends State<GeneralStatefulWidget> {
           updateWord(value);
           return;
         }
-        textChangedTimer = Timer(Duration(seconds: 1), () async {
+        textChangedTimer = Timer(const Duration(seconds: 1), () async {
           final response = await http.get("https://inputtools.google.com/request?itc=${inputMethods[languageCode1]}&num=4&text=$value");
           final List<dynamic> jsonResponse = json.decode(response.body);
           final List<dynamic> gInput = ((jsonResponse[1] as List<dynamic>)[0] as List<dynamic>)[1];
@@ -133,28 +135,28 @@ class EditWord extends State<GeneralStatefulWidget> {
     },
     decoration: InputDecoration(
         hintText: S.of(context).enterWord,
-        border: OutlineInputBorder()
+        border: const OutlineInputBorder()
     ),
   ));
 
   Widget translationField(String translation, {List<String> backTranslations}) {
-    if (translation == null) return SizedBox();
+    if (translation == null) return const SizedBox();
     final checkboxValue = selectedTranslations.contains(translation);
     final checkbox = checkboxValue
         ? Icon(Icons.check_box, color: Colors.blue)
         : Icon(Icons.check_box_outline_blank, color: Colors.blue);
     return InkWell(
       child: Padding(
-        padding: EdgeInsets.all(4),
+        padding: const EdgeInsets.all(4),
         child: Row(
           children: [
             checkbox,
             const SizedBox(width: 8),
-            Text(translation, style: TextStyle(fontSize: 16)),
+            Text(translation, style: const TextStyle(fontSize: 16)),
             const SizedBox(width: 8),
-            backTranslations == null ? SizedBox() : Expanded(
+            backTranslations == null ? const SizedBox() : Expanded(
               child: Text("(${backTranslations.join(", ")})",
-                style: TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 16),
               ),
             ),
           ],

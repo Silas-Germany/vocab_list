@@ -19,10 +19,9 @@ class Overview extends State<GeneralStatefulWidget> {
   final languageCode1Notifier = ValueNotifier(availableLanguageCode[1]);
   final languageCode2Notifier = ValueNotifier(availableLanguageCode[0]);
 
-  final scrollController = ScrollController();
   MapEntry<String, String> get languageCodes => MapEntry(languageCode1Notifier.value, languageCode2Notifier.value);
 
-  Map<String, String> wordList;
+  List<MapEntry<String, String>> wordList;
 
   @override
   void initState() {
@@ -55,7 +54,7 @@ class Overview extends State<GeneralStatefulWidget> {
 
   @override Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text(S.of(context).overview),
+      title: Text(S.of(context).overview(wordList?.length ?? "?")),
       actions: <Widget>[
         IconButton(
           icon: Icon(Icons.add),
@@ -64,15 +63,16 @@ class Overview extends State<GeneralStatefulWidget> {
                 builder: (context) => GeneralStatefulWidget(() => EditWord(languageCodes))
             ));
             if (word != null) {
-              wordList[word.key] = word.value;
-              Csv.saveWordList(languageCodes, wordList);
-              scrollController.jumpTo(0);
+              setState(() {
+                wordList.insert(0, word);
+                Csv.saveWordList(languageCodes, wordList);
+              });
             }
           },
         ),
       ],
     ),
-    body: wordList == null ? Center(child: CircularProgressIndicator()) : Column(
+    body: wordList == null ? const Center(child: CircularProgressIndicator()) : Column(
       children: <Widget>[
         const SizedBox(height: 16),
         Row(
@@ -94,10 +94,9 @@ class Overview extends State<GeneralStatefulWidget> {
         ),
         Expanded(
           child: ListView.builder(
-            controller: scrollController,
             itemCount: wordList.length,
             itemBuilder: (context, index) {
-              final entry = wordList.entries.toList().reversed.toList()[index];
+              final entry = wordList[index];
               return InkWell(
                 child: Row(
                   children: [
@@ -105,11 +104,11 @@ class Overview extends State<GeneralStatefulWidget> {
                       flex: 6,
                       child: Row(
                         children: <Widget>[
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           menuPopup(entry),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Expanded(
-                            child: Text(entry.key, style: TextStyle(fontSize: 20)),
+                            child: Text(entry.key, style: const TextStyle(fontSize: 20)),
                           ),
                         ],
                       ),
@@ -117,8 +116,8 @@ class Overview extends State<GeneralStatefulWidget> {
                     Expanded(
                       flex: 10,
                       child: Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Text(entry.value, style: TextStyle(fontSize: 20)),
+                        padding: const EdgeInsets.all(8),
+                        child: Text(entry.value, style: const TextStyle(fontSize: 20)),
                       ),
                     ),
                   ],
@@ -128,10 +127,10 @@ class Overview extends State<GeneralStatefulWidget> {
                       builder: (context) => GeneralStatefulWidget(() => EditWord(languageCodes, word: entry))
                   )).then((newWord) {
                     if (newWord != null) {
-                      wordList.remove(entry.key);
-                      wordList[newWord.key] = newWord.value;
-                      Csv.saveWordList(languageCodes, wordList);
-                      scrollController.jumpTo(0);
+                      setState(() {
+                        wordList[wordList.indexOf(entry)] = newWord;
+                        Csv.saveWordList(languageCodes, wordList);
+                      });
                     };
                   });
                 }
@@ -161,7 +160,8 @@ class Overview extends State<GeneralStatefulWidget> {
                 child: Text(S.of(context).yes),
                 onPressed: () {
                   setState(() {
-                    wordList.remove(word.key);
+                    wordList.remove(word);
+                    Csv.saveWordList(languageCodes, wordList);
                   });
                   Navigator.of(context).pop();
                 },

@@ -1,0 +1,19 @@
+linter:
+  rules:
+    - camel_case_types
+    - prefer_const_constructors_in_immutables
+    - prefer_final_fields
+    - prefer_final_in_for_each
+    - prefer_final_locals
+    - unnecessary_new
+    - constant_identifier_names
+    - prefer_const_declarations
+    - prefer_const_constructors
+    - prefer_const_literals_to_create_immutables
+    - avoid_annotating_with_dynamic
+    - test_types_in_equals
+    - avoid_shadowing_type_parameters
+
+analyzer:
+  exclude:
+    - lib/generated/**
