@@ -6,6 +6,8 @@
 /.flutter-plugins
 /.flutter-plugins-dependencies
 
-/.idea/
+.idea/
 /lib/generated/
 /lib/secrets.dart
+*.iml
+.gradle

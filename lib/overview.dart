@@ -68,7 +68,14 @@ class Overview extends State<GeneralStatefulWidget> {
           onPressed: () {
             setState(() {
               order = Order.values[(order.index + 1) % Order.values.length];
-              wordList.forEach((entry) => AnkiConverter.downloadSoundFile(entry.key, languageCodes.key));
+            });
+          },
+        ),
+        IconButton(
+          icon: Icon(Icons.sort),
+          onPressed: () {
+            setState(() {
+              AnkiConverter.sendToAnki(wordList);
             });
           },
         ),

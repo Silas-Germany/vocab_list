@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart';
 import 'package:path_provider/path_provider.dart';
@@ -73,5 +74,13 @@ abstract class AnkiConverter {
     final Map<String, dynamic> jsonResponse = json.decode(response.body);
     final mp3Data = base64Decode(jsonResponse["audioContent"]);
     mp3File.writeAsBytes(mp3Data);
+  }
+
+  static sendToAnki(List<MapEntry<String, String>> wordList) async {
+    final channel = await const MethodChannel("anki");
+    final language1 = <String>[];
+    final language2 = <String>[];
+    wordList.forEach((entry) { language1.add(entry.key); language2.add(entry.value); });
+    channel.invokeMethod("addNotes", {"language_1": language1, "language_2": language2});
   }
 }
