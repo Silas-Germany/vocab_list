@@ -62,9 +62,9 @@ class Overview extends State<GeneralStatefulWidget> {
   @override Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
       title: Text(S.of(context).overview(wordList?.length ?? "?", order.toString().split(".").last), overflow: TextOverflow.fade,),
-      actions: <Widget>[
+      actions: wordList == null ? [] : [
         IconButton(
-          icon: Icon(Icons.sort),
+          icon: const Icon(Icons.sort),
           onPressed: () {
             setState(() {
               order = Order.values[(order.index + 1) % Order.values.length];
@@ -72,7 +72,7 @@ class Overview extends State<GeneralStatefulWidget> {
           },
         ),
         IconButton(
-          icon: Icon(Icons.sort),
+          icon:  const Icon(Icons.send),
           onPressed: () {
             setState(() {
               AnkiConverter.sendToAnki(wordList);
@@ -80,7 +80,7 @@ class Overview extends State<GeneralStatefulWidget> {
           },
         ),
         IconButton(
-          icon: Icon(Icons.add),
+          icon: const Icon(Icons.add),
           onPressed: () async {
             final newWord = await Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
                 builder: (context) => GeneralStatefulWidget(() => EditWord(languageCodes))

@@ -51,7 +51,7 @@ abstract class AnkiConverter {
 
   static downloadSoundFile(String word, String languageCode) async {
     if (directory == null) directory = await getExternalStorageDirectory();
-    final mp3File = File("${directory.path}/sound_files_$languageCode/$word.mp3");
+    final mp3File = File("/sdcard/AnkiDroid/collection.media/$word.mp3");
     if (mp3File.existsSync()) return;
     final voice = voices[languageCode].key;
     final gender = voices[languageCode].value;
@@ -78,9 +78,9 @@ abstract class AnkiConverter {
 
   static sendToAnki(List<MapEntry<String, String>> wordList) async {
     final channel = await const MethodChannel("anki");
-    final language1 = <String>[];
-    final language2 = <String>[];
-    wordList.forEach((entry) { language1.add(entry.key); language2.add(entry.value); });
-    channel.invokeMethod("addNotes", {"language_1": language1, "language_2": language2});
+    final front = <String>[];
+    final back = <String>[];
+    wordList.forEach((entry) { front.add(entry.key); back.add(entry.value); });
+    channel.invokeMethod("addNotes", {"front": front, "back": back});
   }
 }
