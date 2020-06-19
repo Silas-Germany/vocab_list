@@ -12,7 +12,9 @@ import 'helper.dart';
 class EditWord extends State<GeneralStatefulWidget> {
 
   static const inputMethods = {
-    "hi": "hi-t-i0-und"
+    "hi": "hi-t-i0-und",
+    "ru": "ru-t-i0-und",
+    "zh-TW": "yue-hant-t-i0-und",
   };
 
   String currentWord;
@@ -77,7 +79,39 @@ class EditWord extends State<GeneralStatefulWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            textEntryField,
+            Row(
+                children: <Widget>[
+                  Expanded(child: textEntryField),
+                  const SizedBox(height: 32),
+                  FlatButton(
+                    onPressed: () async {
+                      final value = wordEntryController.text;
+                      if  (value.isEmpty) return;
+                      final response = await http.get("https://inputtools.google.com/request?itc=${inputMethods[languageCode1]}&num=4&text=$value");
+                      final List<dynamic> jsonResponse = json.decode(response.body);
+                      final List<dynamic> gInput = ((jsonResponse[1] as List<dynamic>)[0] as List<dynamic>)[1];
+                      textChangedTimer = null;
+                      final RenderBox renderBox = context.findRenderObject();
+                      final offset = renderBox.localToGlobal(Offset.zero);
+                      final position = RelativeRect.fromLTRB(offset.dx, offset.dy + renderBox.size.height, offset.dx, 0);
+                      showMenu<String>(
+                        context: context,
+                        position: position,
+                        items: gInput.map((gWord) => PopupMenuItem(
+                          value: gWord.toString(),
+                          child: Text(gWord),
+                        )
+                        ).toList(),
+                      ).then((String selected) {
+                        if (selected == null) return;
+                        wordEntryController.text = selected;
+                        updateWord(selected);
+                      });
+                    },
+                    child: Text(S.of(context).getWord),
+                  )
+                ]
+            ),
             const SizedBox(height: 32),
             translationField(mainTranslation)
           ] + translations.entries.map((category) => <Widget>[
@@ -106,30 +140,8 @@ class EditWord extends State<GeneralStatefulWidget> {
     onChanged: (value) {
       textChangedTimer?.cancel();
       if (value?.isNotEmpty ?? false) {
-        if (inputMethods[languageCode1] == null) {
-          updateWord(value);
-          return;
-        }
         textChangedTimer = Timer(const Duration(seconds: 1), () async {
-          final response = await http.get("https://inputtools.google.com/request?itc=${inputMethods[languageCode1]}&num=4&text=$value");
-          final List<dynamic> jsonResponse = json.decode(response.body);
-          final List<dynamic> gInput = ((jsonResponse[1] as List<dynamic>)[0] as List<dynamic>)[1];
-          textChangedTimer = null;
-          final RenderBox renderBox = context.findRenderObject();
-          final offset = renderBox.localToGlobal(Offset.zero);
-          final position = RelativeRect.fromLTRB(offset.dx, offset.dy + renderBox.size.height, offset.dx, 0);
-          showMenu<String>(
-            context: context,
-            position: position,
-            items: gInput.map((gWord) => PopupMenuItem(
-              value: gWord.toString(),
-              child: Text(gWord),
-            )
-            ).toList(),
-          ).then((String selected) {
-            wordEntryController.text = selected;
-            updateWord(selected ?? value);
-          });
+          updateWord(value);
         });
       }
     },
@@ -172,24 +184,29 @@ class EditWord extends State<GeneralStatefulWidget> {
   }
 
   updateWord(word) async {
-    final response = await http.get("https://translate.googleapis.com/translate_a/single?client=gtx&sl="
-        "$languageCode1&tl=$languageCode2&dt=bd&dt=t&q=$word");
-    setState(() {
-      translations.clear();
-      selectedTranslations.clear();
-      final List<dynamic> jsonResponse = json.decode(response.body);
-      mainTranslation = ((jsonResponse[0] as List<dynamic>)?.first as List<dynamic>)?.first;
-      selectedTranslations.add(mainTranslation);
-      (jsonResponse[1] as List<dynamic>)?.forEach((gTranslation) {
-        final String category = gTranslation[0];
-        translations[category] = {};
-        (gTranslation[2] as List<dynamic>).forEach((translationAndBack) {
-          final String translation = translationAndBack[0];
-          final List<dynamic> backTranslations = translationAndBack[1];
-          translations[category][translation] = backTranslations.map((entry) => entry as String).toList();
+    try {
+      final response = await http.get("https://translate.googleapis.com/translate_a/single?client=gtx&sl="
+          "$languageCode1&tl=$languageCode2&dt=bd&dt=t&q=$word");
+      setState(() {
+        print(response.body);
+        translations.clear();
+        selectedTranslations.clear();
+        final List<dynamic> jsonResponse = json.decode(response.body);
+        mainTranslation = ((jsonResponse[0] as List<dynamic>)?.first as List<dynamic>)?.first;
+        selectedTranslations.add(mainTranslation);
+        (jsonResponse[1] as List<dynamic>)?.forEach((gTranslation) {
+          final String category = gTranslation[0];
+          translations[category] = {};
+          (gTranslation[2] as List<dynamic>).forEach((translationAndBack) {
+            final String translation = translationAndBack[0];
+            final List<dynamic> backTranslations = translationAndBack[1];
+            translations[category][translation] = backTranslations.map((entry) => entry as String).toList();
+          });
         });
+        currentWord = word;
       });
-      currentWord = word;
-    });
+    } catch (e) {
+      showAboutDialog(context: context, applicationVersion: e.toString());
+    }
   }
 }

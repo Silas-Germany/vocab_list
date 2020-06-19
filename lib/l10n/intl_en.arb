@@ -22,6 +22,7 @@
 
   "editWord": "Edit '{word}'",
   "enterWord": "Enter new word",
+  "getWord": "Suggestions",
   "customTranslation": "Custom translations (new line for each)",
   "saveWord": "Save"
 }

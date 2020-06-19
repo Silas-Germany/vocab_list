@@ -73,9 +73,11 @@ class Overview extends State<GeneralStatefulWidget> {
         ),
         IconButton(
           icon:  const Icon(Icons.send),
-          onPressed: () {
+          onPressed: () async {
+            await AnkiConverter.sendToAnki(wordList);
             setState(() {
-              AnkiConverter.sendToAnki(wordList);
+              wordList.clear();
+              AnkiConverter.saveWordList(languageCodes, wordList);
             });
           },
         ),

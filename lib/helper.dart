@@ -23,6 +23,7 @@ abstract class AnkiConverter {
     final wordList = <MapEntry<String, String>>[];
     if (!wordFile.existsSync()) return wordList;
     final wordFileLines = wordFile.readAsLinesSync();
+    if (wordFileLines.isEmpty) return wordList;
     if (wordFileLines.first.split("\t").length == 4) wordFileLines.sort((a, b) => a.split("\t").last.compareTo(b.split("\t").last));
     final addedWords = Set<String>();
     wordFileLines.forEach((line) {
@@ -46,7 +47,7 @@ abstract class AnkiConverter {
 
   static const url = "https://texttospeech.googleapis.com/v1/text:synthesize?key=$apiKey";
   static const voices = {
-    "hi": MapEntry("hi-IN-Wavenet-A", "FEMALE"),
+    "hi": MapEntry("hi-IN-Wavenet-D", "FEMALE"),
   };
 
   static downloadSoundFile(String word, String languageCode) async {
