@@ -83,7 +83,7 @@ class EditWord extends State<GeneralStatefulWidget> {
                 children: <Widget>[
                   Expanded(child: textEntryField),
                   const SizedBox(height: 32),
-                  FlatButton(
+                  Builder(builder: (context) => FlatButton(
                     onPressed: () async {
                       final value = wordEntryController.text;
                       if  (value.isEmpty) return;
@@ -109,7 +109,7 @@ class EditWord extends State<GeneralStatefulWidget> {
                       });
                     },
                     child: Text(S.of(context).getWord),
-                  )
+                  )),
                 ]
             ),
             const SizedBox(height: 32),
@@ -134,7 +134,7 @@ class EditWord extends State<GeneralStatefulWidget> {
     ),
   );
 
-  Widget get textEntryField => Builder(builder: (context) => TextField(
+  Widget get textEntryField => TextField(
     autofocus: newWord,
     controller: wordEntryController,
     onChanged: (value) {
@@ -149,7 +149,7 @@ class EditWord extends State<GeneralStatefulWidget> {
         hintText: S.of(context).enterWord,
         border: const OutlineInputBorder()
     ),
-  ));
+  );
 
   Widget translationField(String translation, {List<String> backTranslations}) {
     if (translation == null) return const SizedBox();
@@ -157,6 +157,18 @@ class EditWord extends State<GeneralStatefulWidget> {
     final checkbox = checkboxValue
         ? Icon(Icons.check_box, color: Colors.blue)
         : Icon(Icons.check_box_outline_blank, color: Colors.blue);
+    final backTranslationWidgets = backTranslations?.expand((backTranslation) =>
+        [
+          TextSpan(
+          text: backTranslation,
+          style: backTranslation != wordEntryController.text ? null : const TextStyle(fontWeight: FontWeight.bold),
+        ),
+          const TextSpan(text: ", "),
+        ]
+    )?.toList();
+    backTranslationWidgets?.removeLast();
+    backTranslationWidgets?.insert(0, const TextSpan(text: "("));
+    backTranslationWidgets?.add(const TextSpan(text: ")"));
     return InkWell(
       child: Padding(
         padding: const EdgeInsets.all(4),
@@ -167,8 +179,11 @@ class EditWord extends State<GeneralStatefulWidget> {
             Text(translation, style: const TextStyle(fontSize: 16)),
             const SizedBox(width: 8),
             backTranslations == null ? const SizedBox() : Expanded(
-              child: Text("(${backTranslations.join(", ")})",
-                style: const TextStyle(fontSize: 16),
+              child: RichText(
+                text: TextSpan(
+                  style: const TextStyle(fontSize: 16, color: Colors.black),
+                  children: backTranslationWidgets,
+                ),
               ),
             ),
           ],

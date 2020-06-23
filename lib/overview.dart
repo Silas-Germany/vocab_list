@@ -64,14 +64,6 @@ class Overview extends State<GeneralStatefulWidget> {
       title: Text(S.of(context).overview(wordList?.length ?? "?", order.toString().split(".").last), overflow: TextOverflow.fade,),
       actions: wordList == null ? [] : [
         IconButton(
-          icon: const Icon(Icons.sort),
-          onPressed: () {
-            setState(() {
-              order = Order.values[(order.index + 1) % Order.values.length];
-            });
-          },
-        ),
-        IconButton(
           icon:  const Icon(Icons.send),
           onPressed: () async {
             await AnkiConverter.sendToAnki(wordList);
@@ -107,23 +99,6 @@ class Overview extends State<GeneralStatefulWidget> {
     body: wordList == null ? const Center(child: CircularProgressIndicator()) : Column(
       children: <Widget>[
         const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            GeneralStatefulWidget(() => LanguageSelector(languageCode1Notifier)),
-            IconButton(
-              icon: Icon(Icons.swap_horiz),
-              onPressed: () {
-                setState(() {
-                  final oldValue = languageCode1Notifier.value;
-                  languageCode1Notifier.value = languageCode2Notifier.value;
-                  languageCode2Notifier.value = oldValue;
-                });
-              },
-            ),
-            GeneralStatefulWidget(() => LanguageSelector(languageCode2Notifier)),
-          ],
-        ),
         Expanded(
           child: ListView.builder(
             itemCount: wordList.length,
