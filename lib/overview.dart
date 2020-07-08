@@ -64,11 +64,20 @@ class Overview extends State<GeneralStatefulWidget> {
       title: Text(S.of(context).overview(wordList?.length ?? "?", order.toString().split(".").last), overflow: TextOverflow.fade,),
       actions: wordList == null ? [] : [
         IconButton(
+          icon: const Icon(Icons.sort),
+          onPressed: () {
+            setState(() {
+              order = Order.values[(order.index + 1) % Order.values.length];
+            });
+          },
+        ),
+        IconButton(
           icon:  const Icon(Icons.send),
           onPressed: () async {
             await AnkiConverter.sendToAnki(wordList);
+            wordList.clear();
+            wordList.addAll(await AnkiConverter.getFromAnki());
             setState(() {
-              wordList.clear();
               AnkiConverter.saveWordList(languageCodes, wordList);
             });
           },

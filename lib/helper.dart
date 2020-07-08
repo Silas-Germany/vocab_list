@@ -81,7 +81,20 @@ abstract class AnkiConverter {
     final channel = await const MethodChannel("anki");
     final front = <String>[];
     final back = <String>[];
-    wordList.forEach((entry) { front.add(entry.key); back.add(entry.value); });
-    channel.invokeMethod("addNotes", {"front": front, "back": back});
+    wordList.reversed.forEach((entry) { front.add(entry.key); back.add(entry.value); });
+    await channel.invokeMethod("addNotes", {"front": front, "back": back});
+  }
+
+  static Future<List<MapEntry<String, String>>> getFromAnki() async {
+    final channel = await const MethodChannel("anki");
+    final words = await channel.invokeMethod("getNotes");
+    final fronts = words["fronts"] as List;
+    final backs = words["backs"] as List;
+    if (fronts.length != backs.length) throw "Invalid Data";
+    final wordList = List<MapEntry<String, String>>();
+    for(int i = 0; i < fronts.length; i++) {
+      wordList.add(MapEntry(fronts[i], backs[i]));
+    }
+    return wordList.reversed.toList();
   }
 }
