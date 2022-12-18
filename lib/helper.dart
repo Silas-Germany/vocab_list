@@ -91,7 +91,7 @@ abstract class AnkiConverter {
     final fronts = words["fronts"] as List;
     final backs = words["backs"] as List;
     if (fronts.length != backs.length) throw "Invalid Data";
-    final wordList = [];
+    final wordList = new List<MapEntry<String, String>>();
     for(int i = 0; i < fronts.length; i++) {
       wordList.add(MapEntry(fronts[i], backs[i]));
     }
