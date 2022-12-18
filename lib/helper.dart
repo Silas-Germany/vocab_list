@@ -71,7 +71,7 @@ abstract class AnkiConverter {
       },
     };
     final headers = {"content-type": "application/json"};
-    final response = await post(url, headers: headers, body: jsonEncode(body));
+    final response = await post(Uri.parse(url), headers: headers, body: jsonEncode(body));
     final Map<String, dynamic> jsonResponse = json.decode(response.body);
     final mp3Data = base64Decode(jsonResponse["audioContent"]);
     mp3File.writeAsBytes(mp3Data);
@@ -91,7 +91,7 @@ abstract class AnkiConverter {
     final fronts = words["fronts"] as List;
     final backs = words["backs"] as List;
     if (fronts.length != backs.length) throw "Invalid Data";
-    final wordList = List<MapEntry<String, String>>();
+    final wordList = [];
     for(int i = 0; i < fronts.length; i++) {
       wordList.add(MapEntry(fronts[i], backs[i]));
     }

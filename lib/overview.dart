@@ -4,8 +4,6 @@ import 'package:flutter/widgets.dart';
 import 'package:vocab_list/add_word.dart';
 import 'package:vocab_list/helper.dart';
 
-import 'generated/l10n.dart';
-
 enum Order {
   added,
   word,
@@ -61,7 +59,7 @@ class Overview extends State<GeneralStatefulWidget> {
 
   @override Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text(S.of(context).overview(wordList?.length ?? "?", order.toString().split(".").last), overflow: TextOverflow.fade,),
+      title: Text("Overview (${wordList?.length ?? "?"} words, ${order.toString().split(".").last})", overflow: TextOverflow.fade,),
       actions: wordList == null ? [] : [
         IconButton(
           icon: const Icon(Icons.sort),
@@ -92,7 +90,7 @@ class Overview extends State<GeneralStatefulWidget> {
               if (wordList.any((word) => word.key == newWord.key)) showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  content: Text(S.of(context).existed),
+                  content: Text('Word existed already'),
                 ),
               );
               else setState(() {
@@ -157,7 +155,7 @@ class Overview extends State<GeneralStatefulWidget> {
                       if (newWord.key != entry.key && wordList.any((word) => word.key == newWord.key)) showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          content: Text(S.of(context).existed),
+                          content: Text('Word existed already'),
                         ),
                       );
                       else setState(() {
@@ -180,17 +178,17 @@ class Overview extends State<GeneralStatefulWidget> {
     icon: Icon(Icons.delete),
     onPressed: () {
       showDialog(context: context,
-          child: AlertDialog(
-            content: Text(S.of(context).deleteConfirmation(word.key)),
+          builder: (context) => AlertDialog(
+            content: Text("Do you want to delete '${word.key}'?"),
             actions: [
-              FlatButton(
-                child: Text(S.of(context).no),
+              TextButton(
+                child: Text('No'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
-              FlatButton(
-                child: Text(S.of(context).yes),
+              TextButton(
+                child: Text('Yes'),
                 onPressed: () {
                   setState(() {
                     wordList.remove(word);
@@ -216,11 +214,8 @@ class LanguageSelector extends State<GeneralStatefulWidget> {
 
   @override Widget build(BuildContext context) {
     final availableLanguages = {
-      "en": S.of(context).english,
-      "hi": S.of(context).hindi,
-      "de": S.of(context).german,
-      "ru": S.of(context).russian,
-      "zh-TW": S.of(context).cantonese,
+      "en": 'English',
+      "hi": 'Hindi',
     };
     return DropdownButton<String>(
       value: languageCodeNotifier.value,

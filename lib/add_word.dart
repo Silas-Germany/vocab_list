@@ -6,7 +6,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import 'generated/l10n.dart';
 import 'helper.dart';
 
 class EditWord extends State<GeneralStatefulWidget> {
@@ -57,7 +56,7 @@ class EditWord extends State<GeneralStatefulWidget> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: Text(newWord ? S.of(context).newWord : S.of(context).editWord(currentWord)),
+      title: Text(newWord ? 'New word' : "Edit '${currentWord}'"),
       actions: <Widget>[
         IconButton(
           icon: Icon(Icons.check),
@@ -83,11 +82,11 @@ class EditWord extends State<GeneralStatefulWidget> {
                 children: <Widget>[
                   Expanded(child: textEntryField),
                   const SizedBox(height: 32),
-                  Builder(builder: (context) => FlatButton(
+                  Builder(builder: (context) => TextButton(
                     onPressed: () async {
                       final value = wordEntryController.text;
                       if  (value.isEmpty) return;
-                      final response = await http.get("https://inputtools.google.com/request?itc=${inputMethods[languageCode1]}&num=4&text=$value");
+                      final response = await http.get(Uri.parse("https://inputtools.google.com/request?itc=${inputMethods[languageCode1]}&num=4&text=$value"));
                       final List<dynamic> jsonResponse = json.decode(response.body);
                       final List<dynamic> gInput = ((jsonResponse[1] as List<dynamic>)[0] as List<dynamic>)[1];
                       textChangedTimer = null;
@@ -108,7 +107,7 @@ class EditWord extends State<GeneralStatefulWidget> {
                         updateWord(selected);
                       });
                     },
-                    child: Text(S.of(context).getWord),
+                    child: Text('Suggestions'),
                   )),
                 ]
             ),
@@ -125,7 +124,7 @@ class EditWord extends State<GeneralStatefulWidget> {
               controller: customTranslationListener,
               maxLines: null,
               decoration: InputDecoration(
-                hintText: S.of(context).customTranslation,
+                hintText: 'Custom translations (new line for each)',
               ),
             ),
           ],
@@ -146,7 +145,7 @@ class EditWord extends State<GeneralStatefulWidget> {
       }
     },
     decoration: InputDecoration(
-        hintText: S.of(context).enterWord,
+        hintText: 'Enter new word',
         border: const OutlineInputBorder()
     ),
   );
@@ -200,8 +199,7 @@ class EditWord extends State<GeneralStatefulWidget> {
 
   updateWord(word) async {
     try {
-      final response = await http.get("https://translate.googleapis.com/translate_a/single?client=gtx&sl="
-          "$languageCode1&tl=$languageCode2&dt=bd&dt=t&q=$word");
+      final response = await http.get(Uri.parse("https://translate.googleapis.com/translate_a/single?client=gtx&sl=$languageCode1&tl=$languageCode2&dt=bd&dt=t&q=$word"));
       setState(() {
         print(response.body);
         translations.clear();
