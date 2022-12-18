@@ -13,7 +13,3 @@ linter:
     - avoid_annotating_with_dynamic
     - test_types_in_equals
     - avoid_shadowing_type_parameters
-
-analyzer:
-  exclude:
-    - lib/generated/**
