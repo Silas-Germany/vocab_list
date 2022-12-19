@@ -22,11 +22,11 @@ class GeneralStatefulWidget extends StatefulWidget {
 
 abstract class AnkiConverter {
 
-  static Directory directory;
+  static Directory? directory;
 
   static Future<List<MapEntry<String, String>>> getWordList() async{
     if (directory == null) directory = await getExternalStorageDirectory();
-    final wordFile = File("${directory.path}/${sourceLanguage}-${targetLanguage}.txt");
+    final wordFile = File("${directory!.path}/${sourceLanguage}-${targetLanguage}.txt");
     final wordList = <MapEntry<String, String>>[];
     if (!wordFile.existsSync()) return wordList;
     final wordFileLines = wordFile.readAsLinesSync();
@@ -42,7 +42,7 @@ abstract class AnkiConverter {
 
   static saveWordList(List<MapEntry<String, String>> wordList) async{
     if (directory == null) directory = await getExternalStorageDirectory();
-    final wordFile = File("${directory.path}/${sourceLanguage}-${targetLanguage}.txt");
+    final wordFile = File("${directory!.path}/${sourceLanguage}-${targetLanguage}.txt");
     if (!wordFile.existsSync()) wordFile.createSync();
     int index = 100;
     wordFile.writeAsString(

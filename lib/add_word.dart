@@ -9,21 +9,21 @@ import 'helper.dart';
 
 class EditWord extends State<GeneralStatefulWidget> {
 
-  String currentWord;
+  String? currentWord;
   final bool newWord;
   final Set<String> selectedTranslations = Set();
-  String mainTranslation;
+  String? mainTranslation;
   Map<String, Map<String, List<String>>> translations = {};
   final customTranslationListener = TextEditingController();
   final TextEditingController wordEntryController;
-  Timer textChangedTimer;
+  Timer? textChangedTimer;
 
-  EditWord({MapEntry<String, String> word}) :
+  EditWord({MapEntry<String, String>? word}) :
         newWord = word == null,
         currentWord = word?.key,
         wordEntryController = TextEditingController(text: word?.key ?? "")
   {
-    init(word?.value?.split("; "));
+    init(word?.value.split("; ") ?? []);
   }
 
   init(List<String> previousTranslations) async {
@@ -79,7 +79,7 @@ class EditWord extends State<GeneralStatefulWidget> {
                       final List<dynamic> jsonResponse = json.decode(response.body);
                       final List<dynamic> gInput = ((jsonResponse[1] as List<dynamic>)[0] as List<dynamic>)[1];
                       textChangedTimer = null;
-                      final RenderBox renderBox = context.findRenderObject();
+                      final RenderBox renderBox = context.findRenderObject() as RenderBox;
                       final offset = renderBox.localToGlobal(Offset.zero);
                       final position = RelativeRect.fromLTRB(offset.dx, offset.dy + renderBox.size.height, offset.dx, 0);
                       showMenu<String>(
@@ -90,7 +90,7 @@ class EditWord extends State<GeneralStatefulWidget> {
                           child: Text(gWord),
                         )
                         ).toList(),
-                      ).then((String selected) {
+                      ).then((String? selected) {
                         if (selected == null) return;
                         wordEntryController.text = selected;
                         updateWord(selected);
@@ -127,7 +127,7 @@ class EditWord extends State<GeneralStatefulWidget> {
     controller: wordEntryController,
     onChanged: (value) {
       textChangedTimer?.cancel();
-      if (value?.isNotEmpty ?? false) {
+      if (value.isNotEmpty) {
         textChangedTimer = Timer(const Duration(seconds: 1), () async {
           updateWord(value);
         });
@@ -139,7 +139,7 @@ class EditWord extends State<GeneralStatefulWidget> {
     ),
   );
 
-  Widget translationField(String translation, {List<String> backTranslations}) {
+  Widget translationField(String? translation, {List<String>? backTranslations}) {
     if (translation == null) return const SizedBox();
     final checkboxValue = selectedTranslations.contains(translation);
     final checkbox = checkboxValue
@@ -153,7 +153,7 @@ class EditWord extends State<GeneralStatefulWidget> {
         ),
           const TextSpan(text: ", "),
         ]
-    )?.toList();
+    ).toList();
     backTranslationWidgets?.removeLast();
     backTranslationWidgets?.insert(0, const TextSpan(text: "("));
     backTranslationWidgets?.add(const TextSpan(text: ")"));
@@ -194,15 +194,15 @@ class EditWord extends State<GeneralStatefulWidget> {
         translations.clear();
         selectedTranslations.clear();
         final List<dynamic> jsonResponse = json.decode(response.body);
-        mainTranslation = ((jsonResponse[0] as List<dynamic>)?.first as List<dynamic>)?.first;
-        selectedTranslations.add(mainTranslation);
-        (jsonResponse[1] as List<dynamic>)?.forEach((gTranslation) {
+        mainTranslation = ((jsonResponse[0] as List<dynamic>).first as List<dynamic>).first;
+        selectedTranslations.add(mainTranslation as String);
+        (jsonResponse[1] as List<dynamic>?)?.forEach((gTranslation) {
           final String category = gTranslation[0];
           translations[category] = {};
           (gTranslation[2] as List<dynamic>).forEach((translationAndBack) {
             final String translation = translationAndBack[0];
             final List<dynamic> backTranslations = translationAndBack[1];
-            translations[category][translation] = backTranslations.map((entry) => entry as String).toList();
+            translations[category]![translation] = backTranslations.map((entry) => entry as String).toList();
           });
         });
         currentWord = word;
