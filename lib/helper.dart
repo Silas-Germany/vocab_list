@@ -7,6 +7,13 @@ import 'package:http/http.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:vocab_list/secrets.dart';
 
+// Defining the language-settings that are supposed to be used
+const sourceLanguage = "en";
+const targetLanguage = "hi";
+const targetVoice = MapEntry("hi-IN-Wavenet-D", "FEMALE");
+const targetInputMethod = "hi-t-i0-und";
+
+// General StatefulWidget as it's not really necessary to have this class
 class GeneralStatefulWidget extends StatefulWidget {
   final State<GeneralStatefulWidget> Function() generateState;
   const GeneralStatefulWidget(this.generateState);
@@ -17,9 +24,9 @@ abstract class AnkiConverter {
 
   static Directory directory;
 
-  static Future<List<MapEntry<String, String>>> getWordList(MapEntry<String, String> languageCodes) async{
+  static Future<List<MapEntry<String, String>>> getWordList() async{
     if (directory == null) directory = await getExternalStorageDirectory();
-    final wordFile = File("${directory.path}/${languageCodes.key}-${languageCodes.value}.txt");
+    final wordFile = File("${directory.path}/${sourceLanguage}-${targetLanguage}.txt");
     final wordList = <MapEntry<String, String>>[];
     if (!wordFile.existsSync()) return wordList;
     final wordFileLines = wordFile.readAsLinesSync();
@@ -33,9 +40,9 @@ abstract class AnkiConverter {
     return wordList;
   }
 
-  static saveWordList(MapEntry<String, String> languageCodes, List<MapEntry<String, String>> wordList) async{
+  static saveWordList(List<MapEntry<String, String>> wordList) async{
     if (directory == null) directory = await getExternalStorageDirectory();
-    final wordFile = File("${directory.path}/${languageCodes.key}-${languageCodes.value}.txt");
+    final wordFile = File("${directory.path}/${sourceLanguage}-${targetLanguage}.txt");
     if (!wordFile.existsSync()) wordFile.createSync();
     int index = 100;
     wordFile.writeAsString(
@@ -46,16 +53,13 @@ abstract class AnkiConverter {
   static String soundFile(MapEntry<String, String> word) => "[sound:${word.key}.mp3]";
 
   static const url = "https://texttospeech.googleapis.com/v1/text:synthesize?key=$apiKey";
-  static const voices = {
-    "hi": MapEntry("hi-IN-Wavenet-D", "FEMALE"),
-  };
 
-  static downloadSoundFile(String word, String languageCode) async {
+  static downloadSoundFile(String word) async {
     if (directory == null) directory = await getExternalStorageDirectory();
     final mp3File = File("/sdcard/AnkiDroid/collection.media/$word.mp3");
     if (mp3File.existsSync()) return;
-    final voice = voices[languageCode].key;
-    final gender = voices[languageCode].value;
+    final voice = targetVoice.key;
+    final gender = targetVoice.value;
     final code = voice.substring(0, 5);
     final body = {
       "input": {
@@ -91,7 +95,7 @@ abstract class AnkiConverter {
     final fronts = words["fronts"] as List;
     final backs = words["backs"] as List;
     if (fronts.length != backs.length) throw "Invalid Data";
-    final wordList = new List<MapEntry<String, String>>();
+    final wordList = List<MapEntry<String, String>>.empty(growable: true);
     for(int i = 0; i < fronts.length; i++) {
       wordList.add(MapEntry(fronts[i], backs[i]));
     }

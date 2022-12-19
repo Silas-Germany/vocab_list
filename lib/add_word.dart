@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -10,28 +9,18 @@ import 'helper.dart';
 
 class EditWord extends State<GeneralStatefulWidget> {
 
-  static const inputMethods = {
-    "hi": "hi-t-i0-und",
-    "ru": "ru-t-i0-und",
-    "zh-TW": "yue-hant-t-i0-und",
-  };
-
   String currentWord;
   final bool newWord;
   final Set<String> selectedTranslations = Set();
   String mainTranslation;
   Map<String, Map<String, List<String>>> translations = {};
   final customTranslationListener = TextEditingController();
-  final String languageCode1;
-  final String languageCode2;
   final TextEditingController wordEntryController;
   Timer textChangedTimer;
 
-  EditWord(MapEntry<String, String> languageCodes, {MapEntry<String, String> word}) :
+  EditWord({MapEntry<String, String> word}) :
         newWord = word == null,
         currentWord = word?.key,
-        languageCode1 = languageCodes.key,
-        languageCode2 = languageCodes.value,
         wordEntryController = TextEditingController(text: word?.key ?? "")
   {
     init(word?.value?.split("; "));
@@ -59,7 +48,7 @@ class EditWord extends State<GeneralStatefulWidget> {
       title: Text(newWord ? 'New word' : "Edit '${currentWord}'"),
       actions: <Widget>[
         IconButton(
-          icon: Icon(Icons.check),
+          icon: const Icon(Icons.check),
           onPressed: () {
             final allTranslations = selectedTranslations.toList() + customTranslationListener.text.split("\n").where(
                     (translation) => translation.trim().isNotEmpty
@@ -86,7 +75,7 @@ class EditWord extends State<GeneralStatefulWidget> {
                     onPressed: () async {
                       final value = wordEntryController.text;
                       if  (value.isEmpty) return;
-                      final response = await http.get(Uri.parse("https://inputtools.google.com/request?itc=${inputMethods[languageCode1]}&num=4&text=$value"));
+                      final response = await http.get(Uri.parse("https://inputtools.google.com/request?itc=${targetInputMethod}&num=4&text=$value"));
                       final List<dynamic> jsonResponse = json.decode(response.body);
                       final List<dynamic> gInput = ((jsonResponse[1] as List<dynamic>)[0] as List<dynamic>)[1];
                       textChangedTimer = null;
@@ -107,7 +96,7 @@ class EditWord extends State<GeneralStatefulWidget> {
                         updateWord(selected);
                       });
                     },
-                    child: Text('Suggestions'),
+                    child: const Text('Suggestions'),
                   )),
                 ]
             ),
@@ -123,7 +112,7 @@ class EditWord extends State<GeneralStatefulWidget> {
             currentWord?.isEmpty != false ? const SizedBox() : TextField(
               controller: customTranslationListener,
               maxLines: null,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Custom translations (new line for each)',
               ),
             ),
@@ -144,7 +133,7 @@ class EditWord extends State<GeneralStatefulWidget> {
         });
       }
     },
-    decoration: InputDecoration(
+    decoration: const InputDecoration(
         hintText: 'Enter new word',
         border: const OutlineInputBorder()
     ),
@@ -154,8 +143,8 @@ class EditWord extends State<GeneralStatefulWidget> {
     if (translation == null) return const SizedBox();
     final checkboxValue = selectedTranslations.contains(translation);
     final checkbox = checkboxValue
-        ? Icon(Icons.check_box, color: Colors.blue)
-        : Icon(Icons.check_box_outline_blank, color: Colors.blue);
+        ? const Icon(Icons.check_box, color: Colors.blue)
+        : const Icon(Icons.check_box_outline_blank, color: Colors.blue);
     final backTranslationWidgets = backTranslations?.expand((backTranslation) =>
         [
           TextSpan(
@@ -199,7 +188,7 @@ class EditWord extends State<GeneralStatefulWidget> {
 
   updateWord(word) async {
     try {
-      final response = await http.get(Uri.parse("https://translate.googleapis.com/translate_a/single?client=gtx&sl=$languageCode1&tl=$languageCode2&dt=bd&dt=t&q=$word"));
+      final response = await http.get(Uri.parse("https://translate.googleapis.com/translate_a/single?client=gtx&sl=$sourceLanguage&tl=$targetLanguage&dt=bd&dt=t&q=$word"));
       setState(() {
         print(response.body);
         translations.clear();

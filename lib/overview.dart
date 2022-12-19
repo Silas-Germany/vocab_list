@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:vocab_list/add_word.dart';
 import 'package:vocab_list/helper.dart';
 
@@ -12,19 +10,7 @@ enum Order {
 
 class Overview extends State<GeneralStatefulWidget> {
 
-  static const availableLanguageCode = [
-    "en",
-    "hi",
-    "de",
-    "ru",
-    "zh-TW",
-  ];
-
-  final languageCode1Notifier = ValueNotifier(availableLanguageCode[1]);
-  final languageCode2Notifier = ValueNotifier(availableLanguageCode[0]);
   Order order = Order.added;
-
-  MapEntry<String, String> get languageCodes => MapEntry(languageCode1Notifier.value, languageCode2Notifier.value);
 
   List<MapEntry<String, String>> wordList;
 
@@ -32,25 +18,13 @@ class Overview extends State<GeneralStatefulWidget> {
   void initState() {
     super.initState();
     updateWordList();
-    languageCode1Notifier.addListener(() {
-      if (languageCode1Notifier.value == languageCode2Notifier.value) {
-        final sameCode = languageCode1Notifier.value;
-        languageCode2Notifier.value = availableLanguageCode.firstWhere((code) => code != sameCode);
-      } else updateWordList();
-    });
-    languageCode2Notifier.addListener(() {
-      if (languageCode1Notifier.value == languageCode2Notifier.value) {
-        final sameCode = languageCode1Notifier.value;
-        languageCode1Notifier.value = availableLanguageCode.firstWhere((code) => code != sameCode);
-      } else updateWordList();
-    });
   }
 
   updateWordList() {
     setState(() {
       wordList = null;
     });
-    AnkiConverter.getWordList(languageCodes).then((list) {
+    AnkiConverter.getWordList().then((list) {
       setState(() {
         wordList = list;
       });
@@ -76,7 +50,7 @@ class Overview extends State<GeneralStatefulWidget> {
             wordList.clear();
             wordList.addAll(await AnkiConverter.getFromAnki());
             setState(() {
-              AnkiConverter.saveWordList(languageCodes, wordList);
+              AnkiConverter.saveWordList(wordList);
             });
           },
         ),
@@ -84,19 +58,19 @@ class Overview extends State<GeneralStatefulWidget> {
           icon: const Icon(Icons.add),
           onPressed: () async {
             final newWord = await Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
-                builder: (context) => GeneralStatefulWidget(() => EditWord(languageCodes))
+                builder: (context) => GeneralStatefulWidget(() => EditWord())
             ));
             if (newWord != null) {
               if (wordList.any((word) => word.key == newWord.key)) showDialog(
                 context: context,
-                builder: (context) => AlertDialog(
+                builder: (context) => const AlertDialog(
                   content: Text('Word existed already'),
                 ),
               );
               else setState(() {
                 wordList.insert(0, newWord);
-                AnkiConverter.saveWordList(languageCodes, wordList);
-                AnkiConverter.downloadSoundFile(newWord.key, languageCodes.key);
+                AnkiConverter.saveWordList(wordList);
+                AnkiConverter.downloadSoundFile(newWord.key);
               });
             }
           },
@@ -149,19 +123,19 @@ class Overview extends State<GeneralStatefulWidget> {
                 ),
                 onLongPress: () {
                   Navigator.of(context).push<MapEntry<String, String>>(MaterialPageRoute(
-                      builder: (context) => GeneralStatefulWidget(() => EditWord(languageCodes, word: entry))
+                      builder: (context) => GeneralStatefulWidget(() => EditWord(word: entry))
                   )).then((newWord) {
                     if (newWord != null) {
                       if (newWord.key != entry.key && wordList.any((word) => word.key == newWord.key)) showDialog(
                         context: context,
-                        builder: (context) => AlertDialog(
+                        builder: (context) => const AlertDialog(
                           content: Text('Word existed already'),
                         ),
                       );
                       else setState(() {
                         wordList[wordList.indexOf(entry)] = newWord;
-                        AnkiConverter.saveWordList(languageCodes, wordList);
-                        AnkiConverter.downloadSoundFile(newWord.key, languageCodes.key);
+                        AnkiConverter.saveWordList(wordList);
+                        AnkiConverter.downloadSoundFile(newWord.key);
                       });
                     };
                   });
@@ -175,24 +149,24 @@ class Overview extends State<GeneralStatefulWidget> {
   );
 
   Widget menuPopup(MapEntry<String, String> word) => IconButton(
-    icon: Icon(Icons.delete),
+    icon: const Icon(Icons.delete),
     onPressed: () {
       showDialog(context: context,
           builder: (context) => AlertDialog(
             content: Text("Do you want to delete '${word.key}'?"),
             actions: [
               TextButton(
-                child: Text('No'),
+                child: const Text('No'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
               ),
               TextButton(
-                child: Text('Yes'),
+                child: const Text('Yes'),
                 onPressed: () {
                   setState(() {
                     wordList.remove(word);
-                    AnkiConverter.saveWordList(languageCodes, wordList);
+                    AnkiConverter.saveWordList(wordList);
                   });
                   Navigator.of(context).pop();
                 },
